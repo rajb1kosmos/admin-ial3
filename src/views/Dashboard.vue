@@ -2,22 +2,26 @@
 import { ref, onMounted, onUnmounted, computed, watch, inject } from "vue";
 import { useProjectStore } from "../store/project";
 import { useUserStore } from "../store/user";
+import { useNotifyStore } from "../store/notify";
 import { useRouter, useRoute } from "vue-router";
 import goSDK from "../services/goSDK";
 import QRCodeStyling from "qr-code-styling";
+import SyncLoader from "vue-spinner/src/SyncLoader.vue";
+
 import axios from "axios";
 
 const router = useRouter();
 const route = useRoute();
 const projectStore = useProjectStore();
 const userStore = useUserStore();
-
+const notifyStore = useNotifyStore();
 const overlay = ref(false);
 const logoutDialog = ref(false);
 const identityData = ref();
 const identityDocName = ref();
 const enrolledLayout = ref(false);
 const userEmail = ref();
+const loader = ref(true);
 // let getData = computed(() => {
 //   return projectStore.getFullData;
 // });
@@ -27,26 +31,23 @@ let getUser = computed(() => {
 });
 
 onMounted(async () => {
+  goSDK.getMeData(getUser.value.userId).then((res) => {
+    if (res === "File not found") {
+      loader.value = false;
+    } else {
+      projectStore.setFullData(res);
+      enrolledLayout.value = true;
+      loader.value = false;
+    }
+  });
   // Fetch User from different authmodule
   const userData = await goSDK.getUserData(
     getUser.value.userId,
-    "626fe148b52002001aee6d2a"
-  );
-  const userADData = await goSDK.getUserData(
-    getUser.value.userId,
-    "66068db7631df049be5966d8"
+    "65b79e39e1b02fe44fde08a1"
   );
 
-  if (
-    (userData.hasOwnProperty("code") || userData.data.length === 0) &&
-    (userADData.hasOwnProperty("code") || userADData.data.length === 0)
-  ) {
-    if (
-      userData.hasOwnProperty("data") &&
-      userData.data.length === 0 &&
-      userData.hasOwnProperty("data") &&
-      userADData.data.length === 0
-    ) {
+  if (userData.hasOwnProperty("code") || userData.data.length === 0) {
+    if (userData.hasOwnProperty("data") && userData.data.length === 0) {
       // "Not found";
       notifyStore.showNotification({
         text: `User name not found`,
@@ -59,27 +60,9 @@ onMounted(async () => {
         type: "error",
       });
     }
-    // loading.value = false;
   } else {
-    // loading.value = false;
     if (userData.data.length !== 0 && userData.data[0].uid !== "") {
       userEmail.value = userData.data[0].email;
-      goSDK.getMeData(userData.data[0].email).then((res) => {
-        if (res === "File not found") {
-        } else {
-          projectStore.setFullData(res);
-          enrolledLayout.value = true;
-        }
-      });
-    } else {
-      goSDK.getMeData(userADData.data[0].email).then((res) => {
-        userEmail.value = userADData.data[0].email;
-        if (res === "File not found") {
-        } else {
-          projectStore.setFullData(res);
-          enrolledLayout.value = true;
-        }
-      });
     }
   }
 });
@@ -310,234 +293,241 @@ const showData = async (docType) => {
 
 <template>
   <div>
-    <!-- Id Document Data Drawer -->
-    <v-overlay class="drawer" v-model="overlay">
-      <div class="drawer-card">
-        <h1 class="drawer-header">{{ identityDocName }}</h1>
-        <div v-for="item in identityData" :key="item">
-          <!-- {{ identityData }} -->
-          <div v-for="prop in Object.keys(item)" :key="prop">
-            <div v-if="prop === 'ImageFront'" class="doc-img">
-              <b>{{ prop }}</b> :
-              <img
-                :src="'data:image/png;base64,' + item.ImageFront"
-                alt="image"
-                width="50%"
-              />
-            </div>
-            <div v-if="prop === 'ImageBack'" class="doc-img">
-              <b>{{ prop }}</b> :
-              <img
-                :src="'data:image/png;base64,' + item.ImageBack"
-                alt="image"
-                width="50%"
-              />
-            </div>
-            <h4
-              v-if="prop !== 'ImageFront' && prop !== 'ImageBack'"
-              class="details"
-            >
-              <b>{{ prop }}</b> : {{ item[prop] }}
-            </h4>
-          </div>
-        </div>
-      </div>
-    </v-overlay>
-
-    <!-- Logout Dialog -->
-    <v-dialog v-model="logoutDialog" fullscreen offset="black">
-      <div class="popup">
-        <h1 class="popup-header">
-          We have sent you a notification to your registered email.
-        </h1>
-        <h3 class="popup-subheader">
-          Please follow the instruction in the email and visit one of our kiosks
-          to complete your verification
-        </h3>
-        <v-btn
-          variant="flat"
-          color="#ee0000"
-          class="enroll-btn"
-          size="large"
-          @click="logout"
-        >
-          Done
-        </v-btn>
-      </div>
-    </v-dialog>
-
-    <!-- Dashboard -->
-
-    <div class="header">
-      <div class="head">
-        <img
-          alt="Vue logo"
-          class="logo"
-          src="@/assets/images/1Kosmos-logo.svg"
-          @click="goToHome"
-        />
-      </div>
-      <h4 class="username">{{ getUser.userId }}</h4>
+    <div class="loader" v-if="loader">
+      <sync-loader :loading="true" color="#ff0000" size="20px"></sync-loader>
+      <h1>Loading</h1>
     </div>
 
-    <div class="container">
-      <div class="user-info">
-        <img src="@/assets/images/avatars.svg" class="qr-logo" alt="" />
-        <div class="user-details">
-          <h1 class="user-name">
-            {{ getUser.firstName }} {{ getUser.lastName }}
-          </h1>
-          <div>
-            <h4>{{ userEmail }}</h4>
+    <div v-else>
+      <!-- Id Document Data Drawer -->
+      <v-overlay class="drawer" v-model="overlay">
+        <div class="drawer-card">
+          <h1 class="drawer-header">{{ identityDocName }}</h1>
+          <div v-for="item in identityData" :key="item">
+            <!-- {{ identityData }} -->
+            <div v-for="prop in Object.keys(item)" :key="prop">
+              <div v-if="prop === 'ImageFront'" class="doc-img">
+                <b>{{ prop }}</b> :
+                <img
+                  :src="'data:image/png;base64,' + item.ImageFront"
+                  alt="image"
+                  width="50%"
+                />
+              </div>
+              <div v-if="prop === 'ImageBack'" class="doc-img">
+                <b>{{ prop }}</b> :
+                <img
+                  :src="'data:image/png;base64,' + item.ImageBack"
+                  alt="image"
+                  width="50%"
+                />
+              </div>
+              <h4
+                v-if="prop !== 'ImageFront' && prop !== 'ImageBack'"
+                class="details"
+              >
+                <b>{{ prop }}</b> : {{ item[prop] }}
+              </h4>
+            </div>
           </div>
-          <h4 v-if="enrolledLayout">IAL3</h4>
-          <h4 v-else>IAL1</h4>
         </div>
+      </v-overlay>
+
+      <!-- Logout Dialog -->
+      <v-dialog v-model="logoutDialog" fullscreen offset="black">
+        <div class="popup">
+          <h1 class="popup-header">
+            We have sent you a notification to your registered email.
+          </h1>
+          <h3 class="popup-subheader">
+            Please follow the instruction in the email and visit one of our
+            kiosks to complete your verification
+          </h3>
+          <v-btn
+            variant="flat"
+            color="#ee0000"
+            class="enroll-btn"
+            size="large"
+            @click="logout"
+          >
+            Done
+          </v-btn>
+        </div>
+      </v-dialog>
+
+      <!-- Dashboard -->
+
+      <div class="header">
+        <div class="head">
+          <img
+            alt="Vue logo"
+            class="logo"
+            src="@/assets/images/1Kosmos-logo.svg"
+            @click="goToHome"
+          />
+        </div>
+        <h4 class="username" @click="logout">{{ getUser.userId }}</h4>
       </div>
 
-      <div class="id-doc">
-        <h3 class="id-header">Identity Documents</h3>
-
-        <div class="card-list" v-if="enrolledLayout">
-          <div class="id-card-enrolled">
-            <div class="id-name">
-              <img src="@/assets/images/id.svg" alt="" />
-              <h3 class="id-name-head">LiveID</h3>
-              <img src="@/assets/images/check.svg" alt="" />
+      <div class="container">
+        <div class="user-info">
+          <img src="@/assets/images/avatars.svg" class="qr-logo" alt="" />
+          <div class="user-details">
+            <h1 class="user-name">
+              {{ getUser.firstName }} {{ getUser.lastName }}
+            </h1>
+            <div>
+              <h4>{{ userEmail }}</h4>
             </div>
-            <h3 class="id-details">
-              Captures a live biometric of your face for comparison with
-              identity documents
-            </h3>
-          </div>
-
-          <div class="id-card-enrolled">
-            <div class="id-name" @click="showData('dl')">
-              <img src="@/assets/images/id.svg" alt="" />
-              <h3 class="id-name-head">Driver's License</h3>
-              <img src="@/assets/images/check.svg" alt="" />
-            </div>
-            <h3 class="id-details">
-              Document issued to individuals to operate of motorized vehicles.
-              Supports USA & Canada.
-            </h3>
-            <v-btn variant="outlined" class="enroll-btn" size="large">
-              Unenroll
-            </v-btn>
-          </div>
-
-          <div class="id-card-enrolled">
-            <div class="id-name">
-              <!-- @click="showData('ppt')" -->
-              <img src="@/assets/images/id.svg" alt="" />
-              <h3 class="id-name-head">Passport</h3>
-              <img src="@/assets/images/check.svg" alt="" />
-            </div>
-            <h3 class="id-details">
-              The passport card is an optional national identity card. Currently
-              supports USA & Canada
-            </h3>
-            <v-btn variant="outlined" class="enroll-btn" size="large">
-              Unenroll
-            </v-btn>
-          </div>
-
-          <div class="id-card">
-            <div class="id-name">
-              <!-- @click="showData('ssn')" -->
-              <img src="@/assets/images/id.svg" class="qr-logo" alt="" />
-              <h3 class="id-name-head">Social Security Number</h3>
-            </div>
-            <h3 class="id-details">
-              Document issued to individuals to operate of motorized vehicles.
-              Supports USA & Canada.
-            </h3>
-            <v-btn variant="outlined" class="enroll-btn" size="large">
-              Unenroll
-            </v-btn>
-          </div>
-
-          <div class="id-card">
-            <div class="id-name">
-              <img src="@/assets/images/id.svg" class="qr-logo" alt="" />
-              <h3 class="id-name-head">Opt for In Person Verification</h3>
-            </div>
-            <h3 class="id-details">
-              User requiring assistance with enrolling documents can opt to
-              proceed to a Kiosk and present the QR code
-            </h3>
-            <v-btn variant="outlined" class="enroll-btn" size="large">
-              Continue
-            </v-btn>
+            <h4 v-if="enrolledLayout">IAL3</h4>
+            <h4 v-else>IAL1</h4>
           </div>
         </div>
 
-        <div class="card-list" v-else>
-          <div class="id-card">
-            <div class="id-name">
-              <img src="@/assets/images/id.svg" class="qr-logo" alt="" />
-              <h3 class="id-name-head">LiveID</h3>
+        <div class="id-doc">
+          <h3 class="id-header">Identity Documents</h3>
+
+          <div class="card-list" v-if="enrolledLayout">
+            <div class="id-card-enrolled">
+              <div class="id-name">
+                <img src="@/assets/images/id.svg" alt="" />
+                <h3 class="id-name-head">LiveID</h3>
+                <img src="@/assets/images/check.svg" alt="" />
+              </div>
+              <h3 class="id-details">
+                Captures a live biometric of your face for comparison with
+                identity documents
+              </h3>
             </div>
-            <h3 class="id-details">
-              Captures a live biometric of your face for comparison with
-              identity documents
-            </h3>
+
+            <div class="id-card-enrolled">
+              <div class="id-name" @click="showData('dl')">
+                <img src="@/assets/images/id.svg" alt="" />
+                <h3 class="id-name-head">Driver's License</h3>
+                <img src="@/assets/images/check.svg" alt="" />
+              </div>
+              <h3 class="id-details">
+                Document issued to individuals to operate of motorized vehicles.
+                Supports USA & Canada.
+              </h3>
+              <v-btn variant="outlined" class="enroll-btn" size="large">
+                Unenroll
+              </v-btn>
+            </div>
+
+            <div class="id-card-enrolled">
+              <div class="id-name">
+                <!-- @click="showData('ppt')" -->
+                <img src="@/assets/images/id.svg" alt="" />
+                <h3 class="id-name-head">Passport</h3>
+                <img src="@/assets/images/check.svg" alt="" />
+              </div>
+              <h3 class="id-details">
+                The passport card is an optional national identity card.
+                Currently supports USA & Canada
+              </h3>
+              <v-btn variant="outlined" class="enroll-btn" size="large">
+                Unenroll
+              </v-btn>
+            </div>
+
+            <div class="id-card">
+              <div class="id-name">
+                <!-- @click="showData('ssn')" -->
+                <img src="@/assets/images/id.svg" class="qr-logo" alt="" />
+                <h3 class="id-name-head">Social Security Number</h3>
+              </div>
+              <h3 class="id-details">
+                Document issued to individuals to operate of motorized vehicles.
+                Supports USA & Canada.
+              </h3>
+              <v-btn variant="outlined" class="enroll-btn" size="large">
+                Unenroll
+              </v-btn>
+            </div>
+
+            <div class="id-card">
+              <div class="id-name">
+                <img src="@/assets/images/id.svg" class="qr-logo" alt="" />
+                <h3 class="id-name-head">Opt for In Person Verification</h3>
+              </div>
+              <h3 class="id-details">
+                User requiring assistance with enrolling documents can opt to
+                proceed to a Kiosk and present the QR code
+              </h3>
+              <v-btn variant="outlined" class="enroll-btn" size="large">
+                Continue
+              </v-btn>
+            </div>
           </div>
 
-          <div class="id-card">
-            <div class="id-name">
-              <img src="@/assets/images/id.svg" class="qr-logo" alt="" />
-              <h3 class="id-name-head">Driver's License</h3>
+          <div class="card-list" v-else>
+            <div class="id-card">
+              <div class="id-name">
+                <img src="@/assets/images/id.svg" class="qr-logo" alt="" />
+                <h3 class="id-name-head">LiveID</h3>
+              </div>
+              <h3 class="id-details">
+                Captures a live biometric of your face for comparison with
+                identity documents
+              </h3>
             </div>
-            <h3 class="id-details">
-              Document issued to individuals to operate of motorized vehicles.
-              Supports USA & Canada.
-            </h3>
-            <v-btn variant="outlined" class="enroll-btn" size="large">
-              Unenroll
-            </v-btn>
-          </div>
 
-          <div class="id-card">
-            <div class="id-name">
-              <img src="@/assets/images/id.svg" class="qr-logo" alt="" />
-              <h3 class="id-name-head">Passport</h3>
+            <div class="id-card">
+              <div class="id-name">
+                <img src="@/assets/images/id.svg" class="qr-logo" alt="" />
+                <h3 class="id-name-head">Driver's License</h3>
+              </div>
+              <h3 class="id-details">
+                Document issued to individuals to operate of motorized vehicles.
+                Supports USA & Canada.
+              </h3>
+              <v-btn variant="outlined" class="enroll-btn" size="large">
+                Unenroll
+              </v-btn>
             </div>
-            <h3 class="id-details">
-              The passport card is an optional national identity card. Currently
-              supports USA & Canada
-            </h3>
-            <v-btn variant="outlined" class="enroll-btn" size="large">
-              Unenroll
-            </v-btn>
-          </div>
 
-          <div class="id-card">
-            <div class="id-name">
-              <img src="@/assets/images/id.svg" class="qr-logo" alt="" />
-              <h3 class="id-name-head">Social Security Number</h3>
+            <div class="id-card">
+              <div class="id-name">
+                <img src="@/assets/images/id.svg" class="qr-logo" alt="" />
+                <h3 class="id-name-head">Passport</h3>
+              </div>
+              <h3 class="id-details">
+                The passport card is an optional national identity card.
+                Currently supports USA & Canada
+              </h3>
+              <v-btn variant="outlined" class="enroll-btn" size="large">
+                Unenroll
+              </v-btn>
             </div>
-            <h3 class="id-details">
-              Document issued to individuals to operate of motorized vehicles.
-              Supports USA & Canada.
-            </h3>
-            <v-btn variant="outlined" class="enroll-btn" size="large">
-              Unenroll
-            </v-btn>
-          </div>
 
-          <div class="id-card">
-            <div class="id-name" @click="showData('pv')">
-              <img src="@/assets/images/id.svg" class="qr-logo" alt="" />
-              <h3 class="id-name-head">Opt for In Person Verification</h3>
+            <div class="id-card">
+              <div class="id-name">
+                <img src="@/assets/images/id.svg" class="qr-logo" alt="" />
+                <h3 class="id-name-head">Social Security Number</h3>
+              </div>
+              <h3 class="id-details">
+                Document issued to individuals to operate of motorized vehicles.
+                Supports USA & Canada.
+              </h3>
+              <v-btn variant="outlined" class="enroll-btn" size="large">
+                Unenroll
+              </v-btn>
             </div>
-            <h3 class="id-details">
-              User requiring assistance with enrolling documents can opt to
-              proceed to a Kiosk and present the QR code
-            </h3>
-            <v-btn variant="outlined" class="enroll-btn" size="large">
-              Continue
-            </v-btn>
+
+            <div class="id-card">
+              <div class="id-name" @click="showData('pv')">
+                <img src="@/assets/images/id.svg" class="qr-logo" alt="" />
+                <h3 class="id-name-head">Opt for In Person Verification</h3>
+              </div>
+              <h3 class="id-details">
+                User requiring assistance with enrolling documents can opt to
+                proceed to a Kiosk and present the QR code
+              </h3>
+              <v-btn variant="outlined" class="enroll-btn" size="large">
+                Continue
+              </v-btn>
+            </div>
           </div>
         </div>
       </div>
@@ -546,6 +536,17 @@ const showData = async (docType) => {
 </template>
 
 <style scoped>
+.loader {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1;
+  background-color: #d1d1d1c7;
+}
+
 .header {
   background-color: #fff;
   display: flex;
@@ -569,6 +570,7 @@ const showData = async (docType) => {
 .username {
   margin-right: 1vw;
   font-weight: bold;
+  cursor: pointer;
 }
 
 .container {

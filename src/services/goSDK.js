@@ -28,7 +28,7 @@ export default {
     const resp = await axios.get(`${api}/session/poll`, {
       headers: {
         licensekey: "d45df581-77c5-4926-940e-09001bc4aad2",
-        community: "corporate",
+        community: "idproofing",
         tenant: "demo3-pilot.1kosmos.net",
         "Content-Type": "application/json",
       },
@@ -45,7 +45,7 @@ export default {
       const resp = await axios.post(`${api}/otp/generate`, request, {
         headers: {
           licensekey: "d45df581-77c5-4926-940e-09001bc4aad2",
-          community: "corporate",
+          community: "idproofing",
           tenant: "demo3-pilot.1kosmos.net",
           "Content-Type": "application/json",
         },
@@ -74,7 +74,7 @@ export default {
       {
         headers: {
           licensekey: "d45df581-77c5-4926-940e-09001bc4aad2",
-          community: "corporate",
+          community: "idproofing",
           tenant: "demo3-pilot.1kosmos.net",
           "Content-Type": "application/json",
         },
@@ -86,7 +86,7 @@ export default {
   async getMeData(request) {
     const resp = await axios.get(
       `https://uwldemo.blockid.co:8451/proofing/next/${request}`,
-      // `uwldemo.blockid.co:8451/proofing/next/testuser1@blockiddemo.com`,
+      // `https://uwldemo.blockid.co:8451/proofing/next/testuser1@blockiddemo.com`,
       {
         headers: {
           "Content-Type": "application/json",

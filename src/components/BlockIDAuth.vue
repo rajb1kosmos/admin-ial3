@@ -15,7 +15,7 @@ const props = defineProps({
 
   community: {
     type: String,
-    default: "corporate",
+    default: "idproofing",
   },
 
   scopes: {

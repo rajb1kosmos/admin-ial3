@@ -2,10 +2,13 @@
 import BlockIDAuth from "../components/BlockIDAuth.vue";
 import { useRouter } from "vue-router";
 import { ref, computed } from "vue";
+import { useNotifyStore } from "../store/notify";
+
 // import { useMq } from "vue3-mq";
 
 // const mq = useMq();
 // const showQR = computed(() => mq.current === "sm");
+const notifyStore = useNotifyStore();
 const router = useRouter();
 
 const guide = ref(null);
@@ -55,7 +58,7 @@ const openDialog = () => {
               authType="fingerprint"
               scopes="did,userId,ial,firstname,lastname,email"
               successPath="/dashboard"
-              community="corporate"
+              community="idproofing"
             ></BlockIDAuth>
             <h5 class="qr-invite">Request an invite</h5>
           </div>
