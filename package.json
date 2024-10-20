@@ -1,0 +1,28 @@
+{
+  "name": "admin-ial3",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 4242",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@vuelidate/core": "^2.0.3",
+    "@vuelidate/validators": "^2.0.4",
+    "amazon-cognito-identity-js": "^6.3.7",
+    "axios": "^1.6.5",
+    "pinia": "^2.1.7",
+    "qr-code-styling": "^1.6.0-rc.1",
+    "vue": "^3.4.21",
+    "vue-axios": "^3.5.2",
+    "vue-router": "^4.2.5",
+    "vue-spinner": "^1.0.4",
+    "vuetify": "^3.7.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
+    "vite": "^5.2.0"
+  }
+}
