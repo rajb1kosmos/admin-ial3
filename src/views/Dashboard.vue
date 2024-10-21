@@ -22,6 +22,7 @@ const identityDocName = ref();
 const enrolledLayout = ref(false);
 const userEmail = ref();
 const loader = ref(true);
+const dataLoader = ref(true)
 // let getData = computed(() => {
 //   return projectStore.getFullData;
 // });
@@ -31,13 +32,20 @@ let getUser = computed(() => {
 });
 
 onMounted(async () => {
-  goSDK.getMeData(getUser.value.userId).then((res) => {
+  goSDK.getFileStatus(getUser.value.userId).then((res) => {
     if (res === "File not found") {
       loader.value = false;
     } else {
-      projectStore.setFullData(res);
       enrolledLayout.value = true;
       loader.value = false;
+    }
+  });
+  goSDK.getMeData(getUser.value.userId).then((res) => {
+    if (res === "File not found") {
+      dataLoader.value = false;
+    } else {
+      projectStore.setFullData(res);
+      dataLoader.value = false;
     }
   });
   // Fetch User from different authmodule
@@ -284,7 +292,7 @@ const showData = async (docType) => {
           emailTemplateB64: base64Template,
         })
         .then(() => {
-          logoutDialog.value = true;
+          router.push("/qr");
         });
       break;
   }
@@ -303,38 +311,47 @@ const showData = async (docType) => {
       <v-overlay class="drawer" v-model="overlay">
         <div class="drawer-card">
           <h1 class="drawer-header">{{ identityDocName }}</h1>
-          <div v-for="item in identityData" :key="item">
-            <!-- {{ identityData }} -->
-            <div v-for="prop in Object.keys(item)" :key="prop">
-              <div v-if="prop === 'ImageFront'" class="doc-img">
-                <b>{{ prop }}</b> :
-                <img
-                  :src="'data:image/png;base64,' + item.ImageFront"
-                  alt="image"
-                  width="50%"
-                />
+          <div v-if="dataLoader" class="loader">
+            <sync-loader
+              :loading="true"
+              color="#ff0000"
+              size="20px"
+            ></sync-loader>
+          </div>
+          <div v-else>
+            <div v-for="item in identityData" :key="item">
+              <!-- {{ identityData }} -->
+              <div v-for="prop in Object.keys(item)" :key="prop">
+                <div v-if="prop === 'ImageFront'" class="doc-img">
+                  <b>{{ prop }}</b> :
+                  <img
+                    :src="'data:image/png;base64,' + item.ImageFront"
+                    alt="image"
+                    width="50%"
+                  />
+                </div>
+                <div v-if="prop === 'ImageBack'" class="doc-img">
+                  <b>{{ prop }}</b> :
+                  <img
+                    :src="'data:image/png;base64,' + item.ImageBack"
+                    alt="image"
+                    width="50%"
+                  />
+                </div>
+                <h4
+                  v-if="prop !== 'ImageFront' && prop !== 'ImageBack'"
+                  class="details"
+                >
+                  <b>{{ prop }}</b> : {{ item[prop] }}
+                </h4>
               </div>
-              <div v-if="prop === 'ImageBack'" class="doc-img">
-                <b>{{ prop }}</b> :
-                <img
-                  :src="'data:image/png;base64,' + item.ImageBack"
-                  alt="image"
-                  width="50%"
-                />
-              </div>
-              <h4
-                v-if="prop !== 'ImageFront' && prop !== 'ImageBack'"
-                class="details"
-              >
-                <b>{{ prop }}</b> : {{ item[prop] }}
-              </h4>
             </div>
           </div>
         </div>
       </v-overlay>
 
       <!-- Logout Dialog -->
-      <v-dialog v-model="logoutDialog" fullscreen offset="black">
+      <!-- <v-dialog v-model="logoutDialog" fullscreen offset="black">
         <div class="popup">
           <h1 class="popup-header">
             We have sent you a notification to your registered email.
@@ -353,7 +370,7 @@ const showData = async (docType) => {
             Done
           </v-btn>
         </div>
-      </v-dialog>
+      </v-dialog> -->
 
       <!-- Dashboard -->
 
@@ -483,7 +500,7 @@ const showData = async (docType) => {
                 Supports USA & Canada.
               </h3>
               <v-btn variant="outlined" class="enroll-btn" size="large">
-                Unenroll
+                Enroll
               </v-btn>
             </div>
 
@@ -497,7 +514,7 @@ const showData = async (docType) => {
                 Currently supports USA & Canada
               </h3>
               <v-btn variant="outlined" class="enroll-btn" size="large">
-                Unenroll
+                Enroll
               </v-btn>
             </div>
 
@@ -511,7 +528,7 @@ const showData = async (docType) => {
                 Supports USA & Canada.
               </h3>
               <v-btn variant="outlined" class="enroll-btn" size="large">
-                Unenroll
+                Enroll
               </v-btn>
             </div>
 
@@ -544,7 +561,6 @@ const showData = async (docType) => {
   justify-content: center;
   align-items: center;
   z-index: 1;
-  background-color: #d1d1d1c7;
 }
 
 .header {

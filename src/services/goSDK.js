@@ -91,9 +91,28 @@ export default {
         headers: {
           "Content-Type": "application/json",
         },
+        params: {
+          needData: true,
+        },
       }
     );
-    return resp.data
+    return resp.data;
     // return json
+  },
+
+  async getFileStatus(request) {
+    const resp = await axios.get(
+      `https://uwldemo.blockid.co:8451/proofing/next/${request}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        params: {
+          needData: false,
+        },
+      }
+    );
+    return resp.data;
+    // return "File"
   },
 };

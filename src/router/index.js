@@ -22,6 +22,19 @@ const router = createRouter({
         next("/");
       },
     },
+    {
+      path: "/qr",
+      name: "QrPage",
+      component: () => import("../views/QrPage.vue"),
+      beforeEnter: (to, from, next) => {
+        const userStore = useUserStore();
+        if (userStore.getLoggedIn) {
+          next();
+          return;
+        }
+        next("/");
+      },
+    },
   ],
 });
 
