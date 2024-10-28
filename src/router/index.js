@@ -13,27 +13,29 @@ const router = createRouter({
       path: "/dashboard",
       name: "dashboard",
       component: () => import("../views/Dashboard.vue"),
-      beforeEnter: (to, from, next) => {
-        const userStore = useUserStore();
-        if (userStore.getLoggedIn) {
-          next();
-          return;
-        }
-        next("/");
-      },
+      // beforeEnter: (to, from, next) => {
+      //   const userStore = useUserStore();
+      //   if (userStore.getLoggedIn) {
+      //     console.log("if")
+      //     next();
+      //     return;
+      //   }
+      //   console.log("out")
+      //   next("/");
+      // },
     },
     {
       path: "/qr",
       name: "QrPage",
       component: () => import("../views/QrPage.vue"),
-      beforeEnter: (to, from, next) => {
-        const userStore = useUserStore();
-        if (userStore.getLoggedIn) {
-          next();
-          return;
-        }
-        next("/");
-      },
+      // beforeEnter: (to, from, next) => {
+      //   const userStore = useUserStore();
+      //   if (userStore.getLoggedIn) {
+      //     next();
+      //     return;
+      //   }
+      //   next("/");
+      // },
     },
   ],
 });

@@ -85,8 +85,8 @@ const getSpecificInfo = (infoType) => {
 };
 
 const logout = () => {
+  userStore.removeUser()
   router.push("/");
-  window.location.reload();
 };
 
 const generateQRCode = async () => {

@@ -108,7 +108,6 @@ export const useUserStore = defineStore({
     },
 
     getLoggedIn(state) {
-      console.log(state.sessionId);
       return state.sessionId !== "";
     },
 

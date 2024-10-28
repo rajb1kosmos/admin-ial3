@@ -79,8 +79,8 @@ const generateQRCode = async () => {
 };
 
 const logout = () => {
+  userStore.removeUser();
   router.push("/");
-  window.location.reload();
 };
 </script>
 

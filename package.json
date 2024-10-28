@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --port 4242",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview --port 4242"
   },
   "dependencies": {
     "@vuelidate/core": "^2.0.3",
